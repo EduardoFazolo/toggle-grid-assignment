@@ -8,9 +8,6 @@ export function App() {
   return (
     <main>
       <h1>Team capacity</h1>
-      <p className="range">
-        {FROM} to {TO}
-      </p>
       <CapacityGrid from={FROM} to={TO} />
     </main>
   )

@@ -13,10 +13,16 @@ h1 {
   margin: 0 0 0.25rem;
 }
 
-.range {
-  margin: 0 0 1.5rem;
-  opacity: 0.6;
-  font-variant-numeric: tabular-nums;
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.error {
+  color: #c0392b;
 }
 
 table {
@@ -29,4 +35,43 @@ td {
   border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
   padding: 0.5rem 0.75rem;
   text-align: left;
+}
+
+td.over {
+  background: color-mix(in srgb, #c0392b 20%, transparent);
+  font-weight: 600;
+}
+
+.pct {
+  opacity: 0.6;
+  font-size: 0.85em;
+}
+
+input[type='number'] {
+  width: 4rem;
+}
+
+@keyframes field-invalid-shake {
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-3px);
+  }
+  40%,
+  60% {
+    transform: translateX(3px);
+  }
+}
+
+.field-invalid {
+  animation: field-invalid-shake 0.4s ease;
+  border-color: #c0392b;
 }

@@ -11,6 +11,8 @@ and why?
 1.  The shape of the JSON returned from the API. Weeks listed once instead of repeated per person, and each person's allocated hours are a map keyed by week-start date instead of an array, so the frontend can just do person.allocated[week] instead of searching through a list every time it draws a cell.
     The shape ended up being (for example): `{ "weeks": ["2025-12-29", ...], "people": [{ "id", "name", "weeklyHours", "allocated": { "<weekStart>": hours } }] }`
 
+2.  What about the exceptions?: exceptions like: negative hours on inputs and From ahead of To have no effects in the UI, and specs don't really mention I should handle exceptions if they were found. I decided to build these exceptions anyways so the screen doesn't look sloppy.
+
 ## What did you notice that looked wrong?
 
 Anything in the output that didn't match what you expected. Whether you fixed it or left
@@ -26,6 +28,8 @@ One concrete example. Every real session has one.
 I like implementing feature by feature, understanding exactly what I'm doing, testing and questioning.
 I separated my tasks into 3 todos. Asked Claude to explain me the first one. He explained me, then I said "ok, let's build it, part by part"... He built everything. He understood that HE needed to do the "part by part", and not that I wanted to validate part by part.
 That was on me with my wording, but still not a very common mistake for him, and would've been quite annoying if the implementation was way larger.
+
+One other minor thing: when I made Claude fix the issue with user being able to select From date ahead of the To date, it basically just made the From date invalid if you picked it instead of just disabling invalid dates, which is how pretty much every UI works, lol. I caught this and fixed it.
 
 ## What would you do differently with a week?
 

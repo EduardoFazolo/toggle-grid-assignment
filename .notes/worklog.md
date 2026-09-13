@@ -27,3 +27,14 @@ left unfinished. Append as you go; a line or two per entry is right.
 - JSON shape: `{ weeks: string[], people: [{ id, name, weeklyHours,
   allocated: { [weekStart]: hours } }] }`. Week keys are the Monday date so
   the frontend can index straight into `allocated[week]`.
+- Fixed: rejected edits (negative capacity, From-after-To) used to leave
+  the input showing the bad value forever with no feedback. First attempt
+  made the date inputs controlled and reverted `.value` on every keystroke
+  — broke worse: re-rendering a native `<input type="date">` mid-typing
+  (a controlled `value` prop update while a segment is still being edited)
+  corrupts its internal segment state, produced literal garbage like
+  `"12026-12-29"`. Fix: both date inputs are uncontrolled (`defaultValue`
+  + `key={from}`/`key={to}` so the week-nav buttons can still force a
+  remount from outside), validated only on `onBlur`, same pattern the
+  capacity input already used safely. Never touch a date input's `.value`
+  while it might still be mid-edit.

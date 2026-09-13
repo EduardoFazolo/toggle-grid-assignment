@@ -39,7 +39,7 @@ briefly indistinguishable in the header text.
 **Fix direction**: show the year, at least when it differs from the
 other visible weeks, or always show it for clarity.
 
-### 3. A rejected date-range edit leaves the picker showing a stale/blank value
+### 3. A rejected date-range edit leaves the picker showing a stale/blank value — FIXED
 
 Setting `From` to a date after the current `To` is correctly rejected
 (the app's `handleRangeChange` returns early, table doesn't change, no
@@ -52,11 +52,14 @@ Net effect: the date picker visibly shows nothing, the table still shows
 the old (correct) range, and there's no error message tying the two
 together. A user would reasonably think something broke.
 
-**Fix direction**: either show an inline validation message, or force
-the input back to the current valid value on rejection (e.g. keyed
-remount or explicit reset).
+**Fix applied**: input is now uncontrolled (`defaultValue` + `key` so the
+week-nav buttons can still force it to a new value from outside),
+validated on blur, reverts to the real value and flashes red if rejected.
+Note: an earlier attempt made it a controlled input that reverted
+`.value` on every keystroke, that made it worse — see `.notes/worklog.md`
+for why.
 
-### 4. Rejected capacity edits give zero feedback
+### 4. Rejected capacity edits give zero feedback — FIXED
 
 Typing a negative number into a capacity cell and tabbing away is
 correctly blocked client-side (confirmed no network request fires), but
@@ -64,8 +67,8 @@ the input is uncontrolled (`defaultValue`) and never resets. It's left
 showing the invalid number indefinitely, no error, no revert, nothing
 distinguishing "saved" from "rejected" from "never touched".
 
-**Fix direction**: at minimum, reset the field to the last known-good
-value on rejection; ideally, show why it was rejected.
+**Fix applied**: reverts to the last known-good value and flashes red on
+rejection, same pattern as #3.
 
 ### 5. Wide date ranges scroll the whole page, not just the table
 

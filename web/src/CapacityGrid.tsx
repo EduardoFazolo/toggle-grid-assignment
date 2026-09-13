@@ -21,6 +21,15 @@ function addDays(iso: string, days: number): string {
   return d.toISOString().slice(0, 10)
 }
 
+// Flashes an input red + shakes it for a moment. Pure DOM, no React state,
+// no re-render — safe to call from any input in a 500-row table without
+// touching render performance.
+function flashInvalid(el: HTMLInputElement) {
+  el.classList.remove('field-invalid')
+  void el.offsetWidth // restart the animation if it's already mid-flash
+  el.classList.add('field-invalid')
+}
+
 function formatWeek(weekStart: string): string {
   const start = new Date(weekStart + 'T00:00:00Z')
   const end = new Date(start)
@@ -68,12 +77,6 @@ export function CapacityGrid({ from: initialFrom, to: initialTo }: Props) {
     setTo((t) => addDays(t, 7 * direction))
   }
 
-  function handleRangeChange(nextFrom: string, nextTo: string) {
-    if (nextFrom > nextTo) return
-    setFrom(nextFrom)
-    setTo(nextTo)
-  }
-
   async function saveWeeklyHours(personId: number, weeklyHours: number) {
     setSavingId(personId)
     try {
@@ -115,10 +118,46 @@ export function CapacityGrid({ from: initialFrom, to: initialTo }: Props) {
         </button>
         <label>
           From{' '}
-          <input type="date" value={from} onChange={(e) => handleRangeChange(e.target.value, to)} />
+          <input
+            // key forces a clean remount when from changes from outside
+            // (the week-nav buttons) — an uncontrolled input can't
+            // otherwise pick up an external change. Uncontrolled +
+            // validate-on-blur is deliberate: making this a controlled
+            // input re-renders it mid-typing, which corrupts a native
+            // date widget's segment state (verified: produces garbage
+            // like "12026-12-29" while typing digit by digit).
+            key={from}
+            type="date"
+            defaultValue={from}
+            max={to}
+            onBlur={(e) => {
+              const next = e.target.value
+              if (!next || next > to) {
+                e.target.value = from
+                flashInvalid(e.target)
+                return
+              }
+              if (next !== from) setFrom(next)
+            }}
+          />
         </label>
         <label>
-          To <input type="date" value={to} onChange={(e) => handleRangeChange(from, e.target.value)} />
+          To{' '}
+          <input
+            key={to}
+            type="date"
+            defaultValue={to}
+            min={from}
+            onBlur={(e) => {
+              const next = e.target.value
+              if (!next || next < from) {
+                e.target.value = to
+                flashInvalid(e.target)
+                return
+              }
+              if (next !== to) setTo(next)
+            }}
+          />
         </label>
       </div>
 
@@ -149,7 +188,12 @@ export function CapacityGrid({ from: initialFrom, to: initialTo }: Props) {
                     disabled={savingId === person.id}
                     onBlur={(e) => {
                       const next = Number(e.target.value)
-                      if (!Number.isNaN(next) && next >= 0 && next !== person.weeklyHours) {
+                      if (Number.isNaN(next) || next < 0) {
+                        e.target.value = String(person.weeklyHours) // reject: bounce back, never leave it lying
+                        flashInvalid(e.target)
+                        return
+                      }
+                      if (next !== person.weeklyHours) {
                         saveWeeklyHours(person.id, next)
                       }
                     }}

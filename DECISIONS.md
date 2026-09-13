@@ -8,22 +8,24 @@ plenty. We read this first.
 There are things this brief doesn't specify. Which ones did you hit, what did you decide,
 and why?
 
-- Eli Nakamura: 0 hours available, 20h scheduled for one week. The spec doesn't leave it clear what should happen in cases like this. Should it show some kind of warning saying that person's scheduled needs realocation? I'm not sure.
+1.  The shape of the JSON returned from the API. Weeks listed once instead of repeated per person, and each person's allocated hours are a map keyed by week-start date instead of an array, so the frontend can just do person.allocated[week] instead of searching through a list every time it draws a cell.
+    The shape ended up being (for example): `{ "weeks": ["2025-12-29", ...], "people": [{ "id", "name", "weeklyHours", "allocated": { "<weekStart>": hours } }] }`
 
 ## What did you notice that looked wrong?
 
 Anything in the output that didn't match what you expected. Whether you fixed it or left
 it, we want to know you saw it.
 
--
+- Eli Nakamura: 0 hours available, 20h scheduled for one week. The spec doesn't leave it clear what should happen in cases like this. Should it show some kind of warning saying that person's scheduled needs realocation? I'm not sure.
+- I can select a "From" date that is ahead of the current "To" and nothing happens. This should be blocked by default
 
 ## What did the AI get wrong that you caught?
 
 One concrete example. Every real session has one.
-I like implementing feature by feature, understanding exactly what I'm doing, testing and questioning. I separated my tasks into 3 todos. Asked Claude to explain me the first one. He explained me, then I said "ok, let's build it, part by part"... He built everything. He understood that HE needed to do the "part by part", and not that I wanted to validate part by part.
-That was on me with my wording, but still not a very common mistake for him.
 
--
+I like implementing feature by feature, understanding exactly what I'm doing, testing and questioning.
+I separated my tasks into 3 todos. Asked Claude to explain me the first one. He explained me, then I said "ok, let's build it, part by part"... He built everything. He understood that HE needed to do the "part by part", and not that I wanted to validate part by part.
+That was on me with my wording, but still not a very common mistake for him, and would've been quite annoying if the implementation was way larger.
 
 ## What would you do differently with a week?
 

@@ -35,6 +35,24 @@ left unfinished. Append as you go; a line or two per entry is right.
   corrupts its internal segment state, produced literal garbage like
   `"12026-12-29"`. Fix: both date inputs are uncontrolled (`defaultValue`
   + `key={from}`/`key={to}` so the week-nav buttons can still force a
-  remount from outside), validated only on `onBlur`, same pattern the
-  capacity input already used safely. Never touch a date input's `.value`
-  while it might still be mid-edit.
+  remount from outside). Never touch a date input's `.value` while it
+  might still be mid-edit.
+- Revised again after actually using it: committing on blur meant just
+  opening the calendar to look around, then clicking elsewhere, silently
+  changed the grid. Moved to an explicit "Apply range" button (+ Enter as
+  a shortcut) — nothing commits until it's clicked. Added `min`/`max` on
+  the date inputs too, so the calendar popup itself grays out impossible
+  dates instead of only catching it after the fact.
+- One more round: navigating months in the native date picker moves the
+  highlighted day and Chrome commits that as `.value`, even with no
+  explicit day click — there's no DOM signal that distinguishes "browsed
+  past" from "picked." So: blurring a date field without clicking Apply
+  now silently reverts it to whatever `from`/`to` currently is (that
+  state only changes on a successful Apply, so it's always "the real
+  current range" already, no extra bookkeeping). Had to add
+  `onMouseDown={preventDefault}` on the Apply button — clicking it
+  otherwise blurs the focused date input first (reverting it) before the
+  button's own onClick runs, which would silently undo the very value
+  you're trying to apply. Verified with focus genuinely held on the
+  input (not `fill()`, which turned out to blur internally and made an
+  earlier test of this look broken when it wasn't).

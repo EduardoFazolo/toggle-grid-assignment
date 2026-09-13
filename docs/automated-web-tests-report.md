@@ -52,12 +52,15 @@ Net effect: the date picker visibly shows nothing, the table still shows
 the old (correct) range, and there's no error message tying the two
 together. A user would reasonably think something broke.
 
-**Fix applied**: input is now uncontrolled (`defaultValue` + `key` so the
-week-nav buttons can still force it to a new value from outside),
-validated on blur, reverts to the real value and flashes red if rejected.
-Note: an earlier attempt made it a controlled input that reverted
-`.value` on every keystroke, that made it worse — see `.notes/worklog.md`
-for why.
+**Fix applied**, revised twice — see `.notes/worklog.md` for the full
+path. Final design: the date fields no longer commit anything on their
+own at all. They're uncontrolled (`defaultValue` + `key` so the week-nav
+buttons can still force a new value from outside), carry `min`/`max` so
+the calendar popup grays out impossible dates before you can pick them,
+and nothing reaches the grid until you click the new "Apply range"
+button (or press Enter). An invalid range on Apply flashes the field red
+and leaves it showing exactly what you typed, no forced revert, no
+silent commit from just blurring a field you were only looking at.
 
 ### 4. Rejected capacity edits give zero feedback — FIXED
 

@@ -29,7 +29,7 @@ I like implementing feature by feature, understanding exactly what I'm doing, te
 I separated my tasks into 3 todos. Asked Claude to explain me the first one. He explained me, then I said "ok, let's build it, part by part"... He built everything. He understood that HE needed to do the "part by part", and not that I wanted to validate part by part.
 That was on me with my wording, but still not a very common mistake for him, and would've been quite annoying if the implementation was way larger.
 
-One other minor thing: when I made Claude fix the issue with user being able to select From date ahead of the To date, it basically just made the From date invalid if you picked it instead of just disabling invalid dates, which is how pretty much every UI works, lol. I caught this and fixed it.
+One other minor thing: when I made Claude fix the issue with user being able to select From date ahead of the To date, it basically just made the From date invalid if you picked it instead of just disabling invalid dates AND it was picking dates on blur, which was horrible and confusing UX. I caught this and fixed it.
 
 ## What would you do differently with a week?
 

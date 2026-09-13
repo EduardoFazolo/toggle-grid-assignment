@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 type Props = {
   from: string
@@ -50,6 +50,8 @@ export function CapacityGrid({ from: initialFrom, to: initialTo }: Props) {
   const [data, setData] = useState<CapacityResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [savingId, setSavingId] = useState<number | null>(null)
+  const fromInputRef = useRef<HTMLInputElement>(null)
+  const toInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -75,6 +77,30 @@ export function CapacityGrid({ from: initialFrom, to: initialTo }: Props) {
   function shiftWeek(direction: 1 | -1) {
     setFrom((f) => addDays(f, 7 * direction))
     setTo((t) => addDays(t, 7 * direction))
+  }
+
+  // Nothing in the date fields takes effect until this is clicked —
+  // opening the calendar to browse, or leaving a field mid-edit, must
+  // never silently change what the grid shows. Reads straight off the
+  // DOM via refs instead of state, since the inputs are intentionally
+  // uncontrolled (see the comment on the inputs below for why).
+  function applyRange() {
+    const nextFrom = fromInputRef.current?.value
+    const nextTo = toInputRef.current?.value
+    let ok = true
+
+    if (!nextFrom || (nextTo && nextFrom > nextTo)) {
+      if (fromInputRef.current) flashInvalid(fromInputRef.current)
+      ok = false
+    }
+    if (!nextTo || (nextFrom && nextTo < nextFrom)) {
+      if (toInputRef.current) flashInvalid(toInputRef.current)
+      ok = false
+    }
+    if (!ok || !nextFrom || !nextTo) return
+
+    setFrom(nextFrom)
+    setTo(nextTo)
   }
 
   async function saveWeeklyHours(personId: number, weeklyHours: number) {
@@ -120,24 +146,28 @@ export function CapacityGrid({ from: initialFrom, to: initialTo }: Props) {
           From{' '}
           <input
             // key forces a clean remount when from changes from outside
-            // (the week-nav buttons) — an uncontrolled input can't
-            // otherwise pick up an external change. Uncontrolled +
-            // validate-on-blur is deliberate: making this a controlled
-            // input re-renders it mid-typing, which corrupts a native
+            // (the week-nav buttons, or a successful Apply) — an
+            // uncontrolled input can't otherwise pick up an external
+            // change. Uncontrolled is deliberate: a controlled `value`
+            // re-renders the input mid-typing, which corrupts a native
             // date widget's segment state (verified: produces garbage
-            // like "12026-12-29" while typing digit by digit).
+            // like "12026-12-29" while typing digit by digit). Nothing
+            // commits until Apply is clicked — see applyRange.
             key={from}
+            ref={fromInputRef}
             type="date"
             defaultValue={from}
             max={to}
+            onKeyDown={(e) => e.key === 'Enter' && applyRange()}
             onBlur={(e) => {
-              const next = e.target.value
-              if (!next || next > to) {
-                e.target.value = from
-                flashInvalid(e.target)
-                return
-              }
-              if (next !== from) setFrom(next)
+              // Browsing the calendar (changing months, etc.) without
+              // explicitly picking a day still changes .value natively —
+              // there's no way to tell "looked around" apart from
+              // "picked a date" at the DOM level. So: leaving the field
+              // without clicking Apply always snaps back to whatever the
+              // grid is actually showing, silently, no flash — this
+              // isn't an error, just "you didn't confirm it."
+              if (e.target.value !== from) e.target.value = from
             }}
           />
         </label>
@@ -145,20 +175,30 @@ export function CapacityGrid({ from: initialFrom, to: initialTo }: Props) {
           To{' '}
           <input
             key={to}
+            ref={toInputRef}
             type="date"
             defaultValue={to}
             min={from}
+            onKeyDown={(e) => e.key === 'Enter' && applyRange()}
             onBlur={(e) => {
-              const next = e.target.value
-              if (!next || next < from) {
-                e.target.value = to
-                flashInvalid(e.target)
-                return
-              }
-              if (next !== to) setTo(next)
+              if (e.target.value !== to) e.target.value = to
             }}
           />
         </label>
+        <button
+          type="button"
+          // Clicking this button shifts focus away from whichever date
+          // input is focused, which fires that input's onBlur BEFORE
+          // this button's onClick runs — and that onBlur would revert
+          // the very value we're about to apply. preventDefault on
+          // mousedown stops the focus shift (and thus the blur) from
+          // happening at all, so onClick below sees the real, intended
+          // value.
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={applyRange}
+        >
+          Apply range
+        </button>
       </div>
 
       {error && <p className="error">Failed to load: {error}</p>}
